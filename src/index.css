@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-size: 18px;
+  }
+
+  body {
+    @apply bg-white text-warm-text font-sans;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .nav-link {
+    @apply text-[12px] uppercase tracking-[0.2em] text-warm-muted hover:text-rose transition-colors duration-200 font-sans font-medium py-1;
+  }
+
+  .section-title {
+    @apply font-serif text-3xl md:text-4xl text-warm-text font-normal;
+  }
+}
