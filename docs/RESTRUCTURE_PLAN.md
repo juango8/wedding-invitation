@@ -18,9 +18,9 @@ A test guest "Invitado De Prueba" exists with token `9cEkZrKBBN` (status pending
 | 0 | Supabase project + Google OAuth setup (manual, guided) | **done** — GH secrets added, Google OAuth configured (user-confirmed 2026-06-10) |
 | 1 | Drizzle schema, migrations, RLS, RPCs | **done** (2026-06-10) — applied + verified vs live DB and REST |
 | 2 | Public site cutover: per-guest links, new RSVP form | **done** (2026-06-10) — e2e-verified in browser vs live Supabase; merge = live cutover (see checklist) |
-| 3 | Google auth + manage page shell | **done (code)** (2026-06-10) — login screen, gate states, OAuth redirect chain verified; live Google login pending user test |
-| 4 | Manage features: CRUD, monitoring, copy/WhatsApp | **done (code)** (2026-06-10) — full panel built; live e2e behind Google login pending user test. Message template: `src/manage/messages.ts` |
-| 5 | Data import, cleanup, docs, hardening | pending |
+| 3 | Google auth + manage page shell | **done** — live Google login + panel confirmed working by user (2026-06-10) |
+| 4 | Manage features: CRUD, monitoring, copy/WhatsApp | **done** — user-confirmed (add guest + public page verified). Message template: `src/manage/messages.ts` |
+| 5 | Data import, cleanup, docs, hardening | **done (code)** (2026-06-10) — import script verified (dry-run), real WhatsApp number set, keepalive workflow, CLAUDE.md rewritten. Pending: run the Sheet import (user CSV), merge to `main` |
 
 ## Locked decisions (2026-06-09)
 
@@ -173,15 +173,18 @@ table after refresh.
 ## Cutover checklist (execute around Phase 2 merge)
 
 The current generic form is live and collecting responses (deadline text says **June 20, 2026**).
-Merging Phase 2 removes it, so:
+Merging the branch removes it, so:
 
-1. GH secrets (`VITE_SUPABASE_*`) set **before** merging — otherwise prod builds with no backend.
-2. Export the Sheet's existing responses (snapshot) before merge.
-3. Recommended order: merge Phase 1 anytime; build Phases 2–4 back-to-back on branches; import
-   the guest list; merge 2–4 the same day; then send out personal links.
-   (If Phase 2 merges alone, guests without links can only reach you via WhatsApp until links go out.)
-4. After cutover, check the Sheet once more for responses that arrived between snapshot and deploy.
-5. Decide whether the "confirma antes del 20 de junio" date needs updating given send-out timing.
+1. ~~GH secrets set before merging~~ ✓ done (user-confirmed 2026-06-10).
+2. Export the old Sheet's responses to CSV **before** merging (snapshot).
+3. Import them: `npm run db:import -- archivo.csv --dry` (review) → without `--dry` (apply).
+4. Merge `claude/supabase-phase-1` → `main` (deploy = cutover; panel + per-guest links go live).
+5. Check the Sheet once more for responses that arrived between snapshot and deploy; re-run the
+   import or mark them manually in the panel (the import never overwrites site answers).
+6. Load the full guest list (panel or CSV) and send the personal links.
+7. Optional tidy-up: delete the test guest "Invitado De Prueba" from the panel; delete the
+   now-unused `VITE_APPS_SCRIPT_URL` repo secret; decide whether the "confirma antes del
+   20 de junio" date needs updating given send-out timing; un-deploy the old Apps Script.
 
 ## Edge cases & policies
 

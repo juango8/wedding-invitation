@@ -10,7 +10,8 @@
     "preview": "node -r ./crypto-polyfill.cjs ./node_modules/vite/bin/vite.js preview",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:import": "node --env-file=.env scripts/import-guests.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.1",

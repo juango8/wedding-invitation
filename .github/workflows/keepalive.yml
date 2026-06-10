@@ -1,0 +1,19 @@
+name: Supabase keepalive
+
+# Free-tier Supabase projects pause after ~7 days without activity, which would take the
+# live RSVP site down. Two real database hits per week keep it awake.
+on:
+  schedule:
+    - cron: '0 12 * * 1,4' # Mondays and Thursdays, 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase (get_guest RPC hits the database)
+        run: |
+          curl -sf -X POST "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/rpc/get_guest" \
+            -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"p_token":"keepalive"}'
