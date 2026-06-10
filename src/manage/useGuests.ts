@@ -75,6 +75,30 @@ export function useGuests() {
     [refresh],
   )
 
+  /** CSV import: batch insert + per-row updates, then a single refetch. */
+  const bulkImport = useCallback(
+    async (
+      inserts: Omit<AdminGuest, 'id' | 'token' | 'created_at' | 'updated_at'>[],
+      updates: { id: string; patch: Record<string, unknown> }[],
+    ): Promise<boolean> => {
+      if (!supabase) return false
+      if (inserts.length > 0) {
+        const { error } = await supabase.from('guests').insert(inserts)
+        if (error) return false
+      }
+      for (const { id, patch } of updates) {
+        const { error } = await supabase.from('guests').update(patch).eq('id', id)
+        if (error) {
+          await refresh()
+          return false
+        }
+      }
+      await refresh()
+      return true
+    },
+    [refresh],
+  )
+
   /** Manual override for guests who answer via WhatsApp instead of the site. */
   const setStatus = useCallback(
     (id: string, status: GuestStatus) =>
@@ -93,6 +117,7 @@ export function useGuests() {
     addGuest,
     updateGuest,
     deleteGuest,
+    bulkImport,
     setStatus,
   }
 }
