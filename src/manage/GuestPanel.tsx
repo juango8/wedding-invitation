@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { GuestStatus } from '../types/rsvp'
+import { buildImportPlan, type ImportPlan } from './csvImport'
 import { GuestFormModal } from './GuestFormModal'
 import { groupMessage, inviteLink, inviteMessage, waSendUrl } from './messages'
 import { useGuests, type AdminGuest } from './useGuests'
@@ -150,7 +151,7 @@ function RowActions({ guest, onEdit, onDelete }: { guest: AdminGuest; onEdit: ()
 type SortKey = 'name' | 'status' | 'responded'
 
 export function GuestPanel() {
-  const { guests, loading, loadError, refresh, addGuest, updateGuest, deleteGuest, setStatus } = useGuests()
+  const { guests, loading, loadError, refresh, addGuest, updateGuest, deleteGuest, bulkImport, setStatus } = useGuests()
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | GuestStatus>('all')
@@ -159,6 +160,11 @@ export function GuestPanel() {
   const [form, setForm] = useState<{ open: boolean; guest: AdminGuest | null }>({ open: false, guest: null })
   const [deleting, setDeleting] = useState<AdminGuest | null>(null)
   const [actionError, setActionError] = useState(false)
+
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [importPlan, setImportPlan] = useState<{ plan: ImportPlan; fileName: string } | null>(null)
+  const [importBusy, setImportBusy] = useState(false)
+  const [importNotice, setImportNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
 
   const groups = useMemo(() => {
     const set = new Set<string>()
@@ -219,6 +225,33 @@ export function GuestPanel() {
   const handleStatus = async (id: string, s: GuestStatus) => {
     const ok = await setStatus(id, s)
     setActionError(!ok)
+  }
+
+  const handleCsvFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file
+    if (!file) return
+    setImportNotice(null)
+    const res = buildImportPlan(await file.text(), guests ?? [])
+    if (res.plan === undefined) setImportNotice({ kind: 'error', text: res.error })
+    else setImportPlan({ plan: res.plan, fileName: file.name })
+  }
+
+  const handleImport = async () => {
+    if (!importPlan) return
+    const { plan } = importPlan
+    setImportBusy(true)
+    const ok = await bulkImport(plan.inserts, plan.updates)
+    setImportBusy(false)
+    setImportPlan(null)
+    setImportNotice(
+      ok
+        ? {
+            kind: 'ok',
+            text: `Importación completa: ${plan.inserts.length} agregados, ${plan.updates.length} actualizados, ${plan.unchanged} sin cambios.`,
+          }
+        : { kind: 'error', text: 'No se pudo completar la importación. Revisa tu conexión e inténtalo de nuevo.' },
+    )
   }
 
   const exportCsv = () => {
@@ -325,6 +358,21 @@ export function GuestPanel() {
           >
             + Agregar invitado
           </button>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            title="Cargar un CSV con columnas Nombre, WhatsApp, Grupo, Estado y Mensaje (solo Nombre es obligatoria)"
+            className="border border-rose text-rose font-sans text-[11px] uppercase tracking-widest px-5 py-2.5 hover:bg-rose hover:text-white transition-colors"
+          >
+            Importar CSV
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => void handleCsvFile(e)}
+          />
           {groupGuests.length > 0 && (
             <CopyButton getText={() => groupMessage(groupGuests)} title={`Copiar mensaje del grupo (${groupGuests.length} enlaces)`}>
               <span className="font-sans text-[11px] uppercase tracking-widest underline underline-offset-4">
@@ -353,6 +401,18 @@ export function GuestPanel() {
       {actionError && (
         <p className="font-sans text-xs text-rose bg-rose/5 border border-rose/30 px-4 py-3">
           La última acción no se pudo completar. Revisa tu conexión e inténtalo de nuevo.
+        </p>
+      )}
+
+      {importNotice && (
+        <p
+          className={`font-sans text-xs px-4 py-3 border ${
+            importNotice.kind === 'ok'
+              ? 'text-rose-dark bg-rose-dark/5 border-rose-dark/30'
+              : 'text-rose bg-rose/5 border-rose/30'
+          }`}
+        >
+          {importNotice.text}
         </p>
       )}
 
@@ -459,6 +519,63 @@ export function GuestPanel() {
       {/* Modals */}
       {form.open && (
         <GuestFormModal initial={form.guest} onSave={handleSave} onClose={() => setForm({ open: false, guest: null })} />
+      )}
+
+      {importPlan && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !importBusy) setImportPlan(null)
+          }}
+        >
+          <div className="bg-white border border-rose-blush/50 p-6 w-full max-w-md space-y-4">
+            <p className="font-serif text-xl text-warm-text">Importar CSV</p>
+            <p className="font-sans text-xs text-warm-muted break-all">{importPlan.fileName}</p>
+            <ul className="font-sans text-sm text-warm-text space-y-1">
+              <li>
+                <span className="text-rose-dark font-medium">{importPlan.plan.inserts.length}</span> invitados nuevos
+              </li>
+              <li>
+                <span className="text-rose font-medium">{importPlan.plan.updates.length}</span> se actualizarán (datos
+                nuevos para nombres ya existentes)
+              </li>
+              <li>
+                <span className="text-warm-muted font-medium">{importPlan.plan.unchanged}</span> sin cambios
+                {importPlan.plan.skipped > 0 && ` · ${importPlan.plan.skipped} filas sin nombre (omitidas)`}
+              </li>
+            </ul>
+            {importPlan.plan.inserts.length > 0 && (
+              <p className="font-sans text-xs text-warm-muted leading-relaxed max-h-28 overflow-y-auto">
+                {importPlan.plan.inserts
+                  .slice(0, 12)
+                  .map((g) => g.full_name)
+                  .join(', ')}
+                {importPlan.plan.inserts.length > 12 && ` y ${importPlan.plan.inserts.length - 12} más`}
+              </p>
+            )}
+            {importPlan.plan.inserts.length === 0 && importPlan.plan.updates.length === 0 && (
+              <p className="font-sans text-xs text-warm-muted">No hay nada que importar de este archivo.</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={importBusy}
+                onClick={() => setImportPlan(null)}
+                className="flex-1 border border-rose-blush/60 text-warm-muted font-sans text-[11px] uppercase tracking-widest py-2.5 hover:border-rose hover:text-rose transition-colors disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={importBusy || (importPlan.plan.inserts.length === 0 && importPlan.plan.updates.length === 0)}
+                onClick={() => void handleImport()}
+                className="flex-1 bg-rose border border-rose text-white font-sans text-[11px] uppercase tracking-widest py-2.5 hover:bg-rose-dark hover:border-rose-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {importBusy ? 'Importando…' : 'Importar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {deleting && (
