@@ -3,11 +3,11 @@ import couplePhoto from '../assets/green_image.png'
 
 export function VenueSection() {
   return (
-    <section id="venue" className="relative py-24 px-8 md:px-16 bg-white overflow-hidden">
+    <section id="venue" className="relative py-24 px-8 md:px-16 bg-warm-light overflow-hidden">
       {/* Botanical background — right side */}
       <div className="absolute right-0 top-0 h-full w-[52%] pointer-events-none select-none">
         <img src={couplePhoto} alt="" aria-hidden="true" className="w-full h-full object-cover opacity-30" />
-        <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent" />
+        <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-warm-light to-transparent" />
       </div>
 
       <div className="max-w-3xl mx-auto relative z-10">
@@ -45,6 +45,33 @@ export function VenueSection() {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
           />
+        </div>
+
+        {/* Navigation buttons */}
+        <div className="mt-6 grid sm:grid-cols-2 gap-4">
+          <a
+            href="https://www.google.com/maps/dir/?api=1&destination=Khunan+Pacha%2C+Calle+San+Francisco+217%2C+Arequipa%2C+Per%C3%BA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-3 bg-rose border border-rose text-white font-sans text-[12px] uppercase tracking-widest py-4 hover:bg-rose-dark hover:border-rose-dark transition-colors duration-300"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="w-5 h-5 shrink-0">
+              <path d="M12 21s-7-5.5-7-11a7 7 0 1114 0c0 5.5-7 11-7 11z" />
+              <circle cx="12" cy="10" r="2.5" />
+            </svg>
+            Abrir en Google Maps
+          </a>
+          <a
+            href="https://waze.com/ul?q=Calle%20San%20Francisco%20217%2C%20Arequipa%2C%20Per%C3%BA&navigate=yes"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-3 bg-white border border-rose text-rose font-sans text-[12px] uppercase tracking-widest py-4 hover:bg-rose hover:text-white transition-colors duration-300"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="w-5 h-5 shrink-0">
+              <path d="M3 11l18-7-7 18-2.5-7.5L3 11z" />
+            </svg>
+            Abrir en Waze
+          </a>
         </div>
 
         <BotanicalDivider className="w-48 mx-auto mt-12" />

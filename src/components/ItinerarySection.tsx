@@ -8,7 +8,7 @@ const SCHEDULE = [
 
 export function ItinerarySection() {
   return (
-    <section id="itinerary" className="py-24 px-8 md:px-16 bg-warm-light">
+    <section id="itinerary" className="py-24 px-8 md:px-16 bg-white">
       <div className="max-w-2xl mx-auto">
         <BotanicalDivider className="w-48 mx-auto mb-12" />
         <h2 className="section-title text-center mb-12">Itinerario</h2>
@@ -28,7 +28,7 @@ export function ItinerarySection() {
 
                 {/* Dot */}
                 <div className="relative shrink-0 hidden sm:flex items-center justify-center w-3 mt-1">
-                  <div className="w-2.5 h-2.5 rounded-full border-2 border-rose bg-warm-light z-10" />
+                  <div className="w-2.5 h-2.5 rounded-full border-2 border-rose bg-white z-10" />
                 </div>
 
                 {/* Content */}
@@ -42,7 +42,7 @@ export function ItinerarySection() {
         </div>
 
         {/* Dress code */}
-        <div className="border border-rose-blush/50 p-8 bg-white text-center">
+        <div className="border border-rose-blush/50 p-8 bg-warm-light text-center">
           <p className="font-sans text-[11px] uppercase tracking-widest text-rose mb-4">Código de vestimenta</p>
           <p className="font-serif text-2xl text-warm-text mb-3">Etiqueta estricta</p>
           <p className="font-sans text-sm text-warm-muted leading-relaxed max-w-xs mx-auto mb-6">

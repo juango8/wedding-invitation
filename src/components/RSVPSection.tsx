@@ -2,6 +2,47 @@ import { useState } from 'react'
 import { BotanicalDivider } from '../assets/botanical'
 import couplePhoto from '../assets/green_image.png'
 
+function CopyableRow({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard API unavailable (e.g. non-HTTPS context) — silently ignore
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-warm-text/60 text-[11px] uppercase tracking-wider shrink-0">{label}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-warm-text truncate">{value}</span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          aria-label={copied ? `${label} copiado` : `Copiar ${label}`}
+          title={copied ? '¡Copiado!' : 'Copiar'}
+          className="shrink-0 p-1.5 -m-1 text-warm-muted hover:text-rose transition-colors duration-200"
+        >
+          {copied ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-rose">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="w-4 h-4">
+              <rect x="9" y="9" width="11" height="11" rx="1.5" />
+              <path d="M5 15H4.5A1.5 1.5 0 013 13.5v-9A1.5 1.5 0 014.5 3h9A1.5 1.5 0 0115 4.5V5" />
+            </svg>
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function RSVPSection() {
   const [attending, setAttending] = useState<'yes' | 'no' | ''>('')
   const [submitted, setSubmitted] = useState(false)
@@ -188,15 +229,9 @@ export function RSVPSection() {
                   <span className="text-warm-text">Interbank</span>
                 </div>
                 <div className="h-px bg-rose-blush/30" />
-                <div className="flex justify-between gap-4">
-                  <span className="text-warm-text/60 text-[11px] uppercase tracking-wider">Cuenta</span>
-                  <span className="text-warm-text">3003090873329</span>
-                </div>
+                <CopyableRow label="Cuenta" value="3003090873329" />
                 <div className="h-px bg-rose-blush/30" />
-                <div className="flex justify-between gap-4">
-                  <span className="text-warm-text/60 text-[11px] uppercase tracking-wider">CCI</span>
-                  <span className="text-warm-text">00330001309087332913</span>
-                </div>
+                <CopyableRow label="CCI" value="00330001309087332913" />
               </div>
               <div className="mt-5 pt-5 border-t border-rose-blush/30 flex flex-col items-center gap-2">
                 <p className="font-sans text-[10px] uppercase tracking-widest text-warm-muted">Yape</p>
@@ -215,15 +250,9 @@ export function RSVPSection() {
                   <span className="text-warm-text">Banco de Crédito del Perú (BCP)</span>
                 </div>
                 <div className="h-px bg-rose-blush/30" />
-                <div className="flex justify-between gap-4">
-                  <span className="text-warm-text/60 text-[11px] uppercase tracking-wider">Cuenta</span>
-                  <span className="text-warm-text">21536301738018</span>
-                </div>
+                <CopyableRow label="Cuenta" value="21536301738018" />
                 <div className="h-px bg-rose-blush/30" />
-                <div className="flex justify-between gap-4">
-                  <span className="text-warm-text/60 text-[11px] uppercase tracking-wider">CCI</span>
-                  <span className="text-warm-text">00221513630173801820</span>
-                </div>
+                <CopyableRow label="CCI" value="00221513630173801820" />
               </div>
               <div className="mt-5 pt-5 border-t border-rose-blush/30 flex flex-col items-center gap-2">
                 <p className="font-sans text-[10px] uppercase tracking-widest text-warm-muted">Yape</p>

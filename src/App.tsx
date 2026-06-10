@@ -12,8 +12,8 @@ export default function App() {
       <main className="flex-1 md:ml-36">
         <HeroSection />
         <OurStorySection />
-        <VenueSection />
         <ItinerarySection />
+        <VenueSection />
         <RSVPSection />
       </main>
     </div>
