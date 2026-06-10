@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useAdminSession } from '../hooks/useAdminSession'
+import { AdminsCard } from './AdminsCard'
 import { GuestPanel } from './GuestPanel'
 
 function CenteredCard({ children }: { children: React.ReactNode }) {
@@ -85,8 +86,9 @@ function AdminShell({ email, onSignOut }: { email: string; onSignOut: () => void
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         <GuestPanel />
+        <AdminsCard currentEmail={email} />
       </main>
     </div>
   )
