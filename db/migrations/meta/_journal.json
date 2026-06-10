@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1781072676972,
+      "tag": "0000_organic_stephen_strange",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781072698193,
+      "tag": "0001_rls_and_rpcs",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781072873247,
+      "tag": "0002_lock_is_admin",
+      "breakpoints": true
+    }
+  ]
+}

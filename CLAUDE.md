@@ -21,6 +21,8 @@ Note: the dev/build/preview scripts invoke Vite through `node -r ./crypto-polyfi
 
 ## Architecture
 
+> ⚠ **Restructure in progress — see [docs/RESTRUCTURE_PLAN.md](docs/RESTRUCTURE_PLAN.md).** The Sheets/Apps Script system described below is being replaced by Supabase + Drizzle + a `#/manage` admin page, and parts of what's documented here (`useGuest.ts`, `src/lib/api.ts`, `apps-script/`) were never actually implemented. Trust the plan doc until Phase 5 rewrites this file.
+
 - No router — [App.tsx](src/App.tsx) stacks section components ([src/components/](src/components/)) in one scrollable page. [Sidebar.tsx](src/components/Sidebar.tsx) (desktop sidebar + mobile hamburger) navigates via anchor ids: `#our-story`, `#venue`, `#itinerary`, `#rsvp`, `#registry`. New sections need both the `id` and a `NAV_ITEMS` entry.
 - `RSVPSection` also contains the Registry section and the site footer, despite its name.
 - **Guest personalization**: invitations are per-guest links of the form `?g=<unique-id>`. [useGuest.ts](src/hooks/useGuest.ts) reads the param and fetches the guest (name + previous answer) from the Apps Script at runtime, so the Google Sheet stays the live source of truth and the guest list never ships in the bundle. States: `none` (no param → manual name input), `loading`, `found` (read-only name, prefilled previous answer, upsert by id), `fallback` (unknown id / network error / 8s timeout → manual input + notice). All HTTP goes through [api.ts](src/lib/api.ts).
