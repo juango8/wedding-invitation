@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useAdminSession } from '../hooks/useAdminSession'
-import { supabase } from '../lib/supabase'
+import { GuestPanel } from './GuestPanel'
 
 function CenteredCard({ children }: { children: React.ReactNode }) {
   return (
@@ -66,23 +66,6 @@ function Unauthorized({ email, onSignOut }: { email: string; onSignOut: () => vo
 }
 
 function AdminShell({ email, onSignOut }: { email: string; onSignOut: () => void }) {
-  const [guestCount, setGuestCount] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (!supabase) return
-    const sb = supabase
-    let cancelled = false
-    void sb
-      .from('guests')
-      .select('*', { count: 'exact', head: true })
-      .then(({ count, error }) => {
-        if (!cancelled && !error) setGuestCount(count ?? 0)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
   return (
     <div className="min-h-screen bg-warm-light">
       <header className="bg-white border-b border-rose-blush/40 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -102,17 +85,8 @@ function AdminShell({ email, onSignOut }: { email: string; onSignOut: () => void
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        <div className="bg-white border border-rose-blush/50 p-8 text-center space-y-3">
-          <p className="font-serif text-xl text-warm-text">Conexión verificada</p>
-          <p className="font-sans text-sm text-warm-muted">
-            Invitados en la base:{' '}
-            <span className="text-warm-text font-medium">{guestCount === null ? '…' : guestCount}</span>
-          </p>
-          <p className="font-sans text-xs text-warm-muted/70">
-            El panel completo (lista, altas, envíos) llega en la fase 4.
-          </p>
-        </div>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <GuestPanel />
       </main>
     </div>
   )

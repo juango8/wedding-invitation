@@ -19,7 +19,7 @@ A test guest "Invitado De Prueba" exists with token `9cEkZrKBBN` (status pending
 | 1 | Drizzle schema, migrations, RLS, RPCs | **done** (2026-06-10) — applied + verified vs live DB and REST |
 | 2 | Public site cutover: per-guest links, new RSVP form | **done** (2026-06-10) — e2e-verified in browser vs live Supabase; merge = live cutover (see checklist) |
 | 3 | Google auth + manage page shell | **done (code)** (2026-06-10) — login screen, gate states, OAuth redirect chain verified; live Google login pending user test |
-| 4 | Manage features: CRUD, monitoring, copy/WhatsApp | pending |
+| 4 | Manage features: CRUD, monitoring, copy/WhatsApp | **done (code)** (2026-06-10) — full panel built; live e2e behind Google login pending user test. Message template: `src/manage/messages.ts` |
 | 5 | Data import, cleanup, docs, hardening | pending |
 
 ## Locked decisions (2026-06-09)
