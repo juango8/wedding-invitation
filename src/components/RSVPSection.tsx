@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { BotanicalDivider } from '../assets/botanical'
 import couplePhoto from '../assets/green_image.png'
+import { useGuest } from '../hooks/useGuest'
+import { submitRsvp } from '../lib/api'
+import { whatsappLink } from '../lib/contact'
+import type { GuestInfo, GuestStatus } from '../types/rsvp'
 
 function CopyableRow({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false)
@@ -43,54 +47,189 @@ function CopyableRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function RSVPSection() {
-  const [attending, setAttending] = useState<'yes' | 'no' | ''>('')
-  const [submitted, setSubmitted] = useState(false)
+function WhatsAppButton({ text }: { text: string }) {
+  return (
+    <a
+      href={whatsappLink(text)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 bg-rose border border-rose text-white font-sans text-[11px] uppercase tracking-widest px-6 py-2.5 hover:bg-rose-dark hover:border-rose-dark transition-colors duration-300"
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+      </svg>
+      Escribir por WhatsApp
+    </a>
+  )
+}
+
+function NoticeCard({ title, body, children }: { title: string; body: string; children?: React.ReactNode }) {
+  return (
+    <div className="border border-rose-blush/50 bg-white/90 p-8 text-center space-y-4">
+      <p className="font-serif text-xl text-warm-text">{title}</p>
+      <p className="font-sans text-sm text-warm-muted leading-relaxed">{body}</p>
+      {children}
+    </div>
+  )
+}
+
+const ANSWER_LABEL: Record<Exclude<GuestStatus, 'pending'>, string> = {
+  accepted: '¡Con mucho gusto asistiré!',
+  declined: 'Con pena, no podré asistir',
+}
+
+function GuestRsvp({ token, guest }: { token: string; guest: GuestInfo }) {
+  const answered = guest.status !== 'pending'
+  const [mode, setMode] = useState<'summary' | 'form' | 'done'>(answered ? 'summary' : 'form')
+  const [attending, setAttending] = useState<'yes' | 'no' | ''>(
+    guest.status === 'accepted' ? 'yes' : guest.status === 'declined' ? 'no' : '',
+  )
+  const [message, setMessage] = useState(guest.message ?? '')
+  const [savedStatus, setSavedStatus] = useState<GuestStatus>(guest.status)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(false)
+  const [failed, setFailed] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const form = e.currentTarget
-    const data = new FormData(form)
-    const name = data.get('name') as string
-    const message = data.get('message') as string
-
-    const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL
-
+    if (!attending) return
     setLoading(true)
-    setError(false)
-
-    if (!scriptUrl) {
-      console.error('RSVP: VITE_APPS_SCRIPT_URL is not configured in .env file.')
-      setError(true)
-      setLoading(false)
-      return
-    }
-
-    try {
-      const response = await fetch(scriptUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          name,
-          attending: attending === 'yes' ? 'Sí, ¡con gusto!' : 'Con pena, no podré',
-          message: message || '',
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('RSVP submission failed on server')
-      }
-
-      setSubmitted(true)
-    } catch (err) {
-      console.error('RSVP submission error:', err)
-      setError(true)
-    } finally {
-      setLoading(false)
+    setFailed(false)
+    const result = await submitRsvp(token, attending === 'yes', message)
+    setLoading(false)
+    if (result === 'ok') {
+      setSavedStatus(attending === 'yes' ? 'accepted' : 'declined')
+      setMode('done')
+    } else {
+      setFailed(true)
     }
   }
+
+  const guestName = (
+    <div className="text-center mb-10">
+      <p className="font-sans text-[12px] uppercase tracking-widest text-warm-muted mb-2">Invitación para</p>
+      <p className="font-serif text-3xl text-warm-text">{guest.fullName}</p>
+    </div>
+  )
+
+  if (mode === 'done') {
+    return (
+      <div className="text-center py-10">
+        <p className="font-serif text-2xl text-warm-text mb-3">¡Muchas gracias, {guest.fullName}!</p>
+        <p className="font-sans text-sm text-warm-muted mb-8">
+          {savedStatus === 'accepted'
+            ? 'Tu confirmación fue enviada. ¡Tenemos muchas ganas de verte!'
+            : 'Registramos tu respuesta. ¡Te echaremos de menos! Igual te queremos mucho 🤎'}
+        </p>
+        <button
+          type="button"
+          onClick={() => setMode('form')}
+          className="font-sans text-[11px] uppercase tracking-widest text-warm-muted underline underline-offset-4 hover:text-rose transition-colors"
+        >
+          Cambiar mi respuesta
+        </button>
+      </div>
+    )
+  }
+
+  if (mode === 'summary') {
+    return (
+      <div>
+        {guestName}
+        <div className="border border-rose-blush/50 bg-white/90 p-8 text-center space-y-4">
+          <p className="font-sans text-[12px] uppercase tracking-widest text-warm-muted">Ya registramos tu respuesta</p>
+          <p className="font-serif text-xl text-warm-text">
+            {savedStatus !== 'pending' ? ANSWER_LABEL[savedStatus] : ''}
+          </p>
+          {guest.message && <p className="font-serif italic text-warm-muted text-sm">“{guest.message}”</p>}
+          <button
+            type="button"
+            onClick={() => setMode('form')}
+            className="font-sans text-[11px] uppercase tracking-widest text-warm-muted underline underline-offset-4 hover:text-rose transition-colors"
+          >
+            Cambiar mi respuesta
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {guestName}
+
+      <div>
+        <p className="block font-sans text-[12px] uppercase tracking-widest text-warm-muted mb-3">
+          ¿Asistirás?
+        </p>
+        <div className="flex gap-4">
+          {(['yes', 'no'] as const).map((val) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setAttending(val)}
+              className={`flex-1 py-3 border font-sans text-[11px] uppercase tracking-widest transition-colors duration-200 ${attending === val
+                ? 'bg-rose-dark border-rose-dark text-white'
+                : 'bg-rose border-rose text-white hover:bg-rose-dark hover:border-rose-dark'
+                }`}
+            >
+              {val === 'yes' ? '¡Con mucho gusto!' : 'Con pena, no podré'}
+            </button>
+          ))}
+        </div>
+        {attending === 'no' && (
+          <p className="mt-3 font-serif italic text-warm-muted text-sm">
+            ¡Te echaremos de menos! Igual te queremos mucho 🤎
+          </p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="message" className="block font-sans text-[12px] uppercase tracking-widest text-warm-muted mb-2">
+          Mensaje para los novios <span className="normal-case text-warm-muted/60">(opcional)</span>
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          rows={3}
+          maxLength={500}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          className="w-full border border-rose-blush/60 px-4 py-3 font-sans text-sm text-warm-text bg-white focus:outline-none focus:border-rose transition-colors resize-none"
+          placeholder="Comparte unas palabras bonitas…"
+        />
+      </div>
+
+      {failed && (
+        <div className="border border-rose/30 bg-rose/5 p-5 text-center space-y-3">
+          <p className="font-sans text-[12px] text-rose">
+            Hubo un problema al enviar tu confirmación.
+          </p>
+          <p className="font-sans text-[11px] text-warm-muted">
+            Por favor escríbenos directamente por WhatsApp:
+          </p>
+          <WhatsAppButton
+            text={`¡Hola! Soy ${guest.fullName}. ${attending === 'yes'
+              ? 'Confirmo mi asistencia a la boda de Juango y Mafer 🤍'
+              : 'Lamentablemente no podré asistir a la boda de Juango y Mafer'}`}
+          />
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={!attending || loading}
+        className="w-full bg-rose border border-rose text-white font-sans text-[12px] uppercase tracking-widest py-4 hover:bg-rose-dark hover:border-rose-dark transition-colors duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {loading ? 'Enviando…' : attending === 'no' ? 'Enviar respuesta' : 'Confirmar asistencia'}
+      </button>
+    </form>
+  )
+}
+
+const CONTACT_TEXT = '¡Hola! Quiero confirmar mi asistencia a la boda de Juango y Mafer 🤍'
+
+export function RSVPSection() {
+  const { state, retry } = useGuest()
 
   return (
     <>
@@ -108,97 +247,49 @@ export function RSVPSection() {
             Por favor confirma antes del 20 de junio de 2026
           </p>
 
-          {submitted ? (
-            <div className="text-center py-10">
-              <p className="font-serif text-2xl text-warm-text mb-3">¡Muchas gracias!</p>
-              <p className="font-sans text-sm text-warm-muted">Tu confirmación fue enviada. ¡Tenemos muchas ganas de verte!</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="name" className="block font-sans text-[12px] uppercase tracking-widest text-warm-muted mb-2">
-                  Nombre completo
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  required
-                  type="text"
-                  className="w-full border border-rose-blush/60 px-4 py-3 font-sans text-sm text-warm-text bg-white focus:outline-none focus:border-rose transition-colors"
-                  placeholder="Tu nombre"
-                />
-              </div>
-
-              <div>
-                <p className="block font-sans text-[12px] uppercase tracking-widest text-warm-muted mb-3">
-                  ¿Asistirás?
-                </p>
-                <div className="flex gap-4">
-                  {(['yes', 'no'] as const).map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setAttending(val)}
-                      className={`flex-1 py-3 border font-sans text-[11px] uppercase tracking-widest transition-colors duration-200 ${attending === val
-                        ? 'bg-rose-dark border-rose-dark text-white'
-                        : 'bg-rose border-rose text-white hover:bg-rose-dark hover:border-rose-dark'
-                        }`}
-                    >
-                      {val === 'yes' ? '¡Con mucho gusto!' : 'Con pena, no podré'}
-                    </button>
-                  ))}
-                </div>
-                {attending === 'no' && (
-                  <p className="mt-3 font-serif italic text-warm-muted text-sm">
-                    ¡Te echaremos de menos! Igual te queremos mucho 🤎
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="message" className="block font-sans text-[12px] uppercase tracking-widest text-warm-muted mb-2">
-                  Mensaje para los novios <span className="normal-case text-warm-muted/60">(opcional)</span>
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows={3}
-                  className="w-full border border-rose-blush/60 px-4 py-3 font-sans text-sm text-warm-text bg-white focus:outline-none focus:border-rose transition-colors resize-none"
-                  placeholder="Comparte unas palabras bonitas…"
-                />
-              </div>
-
-              {error && (
-                <div className="border border-rose/30 bg-rose/5 p-5 text-center space-y-3">
-                  <p className="font-sans text-[12px] text-rose">
-                    Hubo un problema al enviar tu confirmación.
-                  </p>
-                  <p className="font-sans text-[11px] text-warm-muted">
-                    Por favor escríbenos directamente por WhatsApp:
-                  </p>
-                  <a
-                    href={`https://wa.me/51999999999?text=${encodeURIComponent('¡Hola! Quiero confirmar mi asistencia a la boda de Juango y Mafer 🤍')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-rose border border-rose text-white font-sans text-[11px] uppercase tracking-widest px-6 py-2.5 hover:bg-rose-dark hover:border-rose-dark transition-colors duration-300"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                    Escribir por WhatsApp
-                  </a>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={!attending || loading}
-                className="w-full bg-rose border border-rose text-white font-sans text-[12px] uppercase tracking-widest py-4 hover:bg-rose-dark hover:border-rose-dark transition-colors duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Enviando…' : attending === 'no' ? 'Enviar respuesta' : 'Confirmar asistencia'}
-              </button>
-            </form>
+          {state.kind === 'loading' && (
+            <p className="text-center font-sans text-sm text-warm-muted animate-pulse py-10">
+              Cargando tu invitación…
+            </p>
           )}
+
+          {state.kind === 'none' && (
+            <NoticeCard
+              title="Esta invitación es personal"
+              body="Para confirmar tu asistencia, abre el enlace personal que te enviamos. ¿No lo tienes? Escríbenos y te lo reenviamos:"
+            >
+              <WhatsAppButton text={CONTACT_TEXT} />
+            </NoticeCard>
+          )}
+
+          {state.kind === 'invalid' && (
+            <NoticeCard
+              title="No encontramos tu invitación"
+              body="El enlace no parece ser válido. Revisa que sea exactamente el que te enviamos, o escríbenos:"
+            >
+              <WhatsAppButton text={CONTACT_TEXT} />
+            </NoticeCard>
+          )}
+
+          {state.kind === 'error' && (
+            <NoticeCard
+              title="No pudimos cargar tu invitación"
+              body="Parece un problema de conexión. Inténtalo de nuevo en unos segundos o escríbenos:"
+            >
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={retry}
+                  className="bg-rose-dark border border-rose-dark text-white font-sans text-[11px] uppercase tracking-widest px-6 py-2.5 hover:bg-rose hover:border-rose transition-colors duration-300"
+                >
+                  Reintentar
+                </button>
+                <WhatsAppButton text={CONTACT_TEXT} />
+              </div>
+            </NoticeCard>
+          )}
+
+          {state.kind === 'found' && <GuestRsvp token={state.token} guest={state.guest} />}
 
           <BotanicalDivider className="w-48 mx-auto mt-12" />
         </div>
