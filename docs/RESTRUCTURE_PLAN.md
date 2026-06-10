@@ -1,7 +1,9 @@
 # Restructure: Google Sheets → Supabase + Manage page
 
-Cross-session source of truth for the restructure. Work happens **one phase per session/PR**;
+Cross-session source of truth for the restructure. Work happens **one phase per session**;
 update the status table when a phase lands. Each phase ends with `npm run lint` + `npm run build` green.
+All phases live on the single branch `claude/supabase-phase-1` (user decision 2026-06-10 — no per-phase branches).
+A test guest "Invitado De Prueba" exists with token `9cEkZrKBBN` (status pending) for manual demos.
 
 > ⚠ **Trust this document over CLAUDE.md during the restructure.** CLAUDE.md's "Architecture"
 > section describes a per-guest-link system (`useGuest.ts`, `src/lib/api.ts`, `apps-script/`) that
@@ -13,9 +15,9 @@ update the status table when a phase lands. Each phase ends with `npm run lint` 
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | Supabase project + Google OAuth setup (manual, guided) | **done** — pending user confirmation: 2 GitHub secrets, Google OAuth (Part C, needed by Phase 3) |
-| 1 | Drizzle schema, migrations, RLS, RPCs | **done** (2026-06-10, branch `claude/supabase-phase-1`) — applied + verified vs live DB and REST |
-| 2 | Public site cutover: per-guest links, new RSVP form | pending |
+| 0 | Supabase project + Google OAuth setup (manual, guided) | **done** — GH secrets added, Google OAuth configured (user-confirmed 2026-06-10) |
+| 1 | Drizzle schema, migrations, RLS, RPCs | **done** (2026-06-10) — applied + verified vs live DB and REST |
+| 2 | Public site cutover: per-guest links, new RSVP form | **done** (2026-06-10) — e2e-verified in browser vs live Supabase; merge = live cutover (see checklist) |
 | 3 | Google auth + manage page shell | pending |
 | 4 | Manage features: CRUD, monitoring, copy/WhatsApp | pending |
 | 5 | Data import, cleanup, docs, hardening | pending |
