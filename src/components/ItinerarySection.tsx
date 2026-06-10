@@ -1,4 +1,5 @@
 import { BotanicalDivider } from '../assets/botanical'
+import couplePhoto from '../assets/green_image.png'
 
 const SCHEDULE = [
   { time: '11:30 AM', label: 'Ceremonia', description: 'Inicio de la ceremonia civil' },
@@ -8,8 +9,14 @@ const SCHEDULE = [
 
 export function ItinerarySection() {
   return (
-    <section id="itinerary" className="py-24 px-8 md:px-16 bg-white">
-      <div className="max-w-2xl mx-auto">
+    <section id="itinerary" className="relative py-24 px-8 md:px-16 bg-white overflow-hidden">
+      {/* Botanical background — right side */}
+      <div className="absolute right-0 top-0 h-full w-[52%] pointer-events-none select-none">
+        <img src={couplePhoto} alt="" aria-hidden="true" className="w-full h-full object-cover opacity-30" />
+        <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent" />
+      </div>
+
+      <div className="max-w-2xl mx-auto relative z-10">
         <BotanicalDivider className="w-48 mx-auto mb-12" />
         <h2 className="section-title text-center mb-12">Itinerario</h2>
 
