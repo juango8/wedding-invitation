@@ -2,8 +2,8 @@ import { useState } from 'react'
 
 const NAV_ITEMS = [
   { label: 'Historia', href: '#our-story' },
-  { label: 'El Lugar', href: '#venue' },
   { label: 'Itinerario', href: '#itinerary' },
+  { label: 'El Lugar', href: '#venue' },
   { label: 'Asistencia', href: '#rsvp' },
   { label: 'Regalos', href: '#registry' },
 ]

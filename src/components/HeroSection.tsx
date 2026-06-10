@@ -1,4 +1,59 @@
+import { useEffect, useState } from 'react'
 import couplePhoto from '../assets/green_image.png'
+
+// Inicio de la ceremonia: 18 de julio de 2026, 11:30 AM (hora de Perú, UTC-5)
+const WEDDING_DATE = new Date('2026-07-18T11:30:00-05:00')
+
+function getTimeLeft() {
+  const diff = WEDDING_DATE.getTime() - Date.now()
+  if (diff <= 0) return null
+  return {
+    days: Math.floor(diff / 86_400_000),
+    hours: Math.floor(diff / 3_600_000) % 24,
+    minutes: Math.floor(diff / 60_000) % 60,
+    seconds: Math.floor(diff / 1_000) % 60,
+  }
+}
+
+function Countdown() {
+  const [timeLeft, setTimeLeft] = useState(getTimeLeft)
+
+  useEffect(() => {
+    const interval = setInterval(() => setTimeLeft(getTimeLeft()), 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (!timeLeft) {
+    return (
+      <p className="mt-8 font-serif italic text-rose text-lg">¡Llegó el gran día!</p>
+    )
+  }
+
+  const units = [
+    { value: timeLeft.days, label: 'Días' },
+    { value: timeLeft.hours, label: 'Horas' },
+    { value: timeLeft.minutes, label: 'Min' },
+    { value: timeLeft.seconds, label: 'Seg' },
+  ]
+
+  return (
+    <div className="mt-8 flex items-start gap-4">
+      {units.map(({ value, label }, i) => (
+        <div key={label} className="flex items-start gap-4">
+          {i > 0 && <span className="font-serif text-2xl text-rose/40 leading-none mt-1">·</span>}
+          <div className="flex flex-col items-center min-w-[44px]">
+            <span className="font-serif text-3xl text-warm-text tabular-nums leading-none">
+              {String(value).padStart(2, '0')}
+            </span>
+            <span className="font-sans text-[10px] uppercase tracking-widest text-warm-muted mt-2">
+              {label}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 const PORTRAIT_URL =
   'https://res.cloudinary.com/ddcsty2aq/image/upload/q_auto/f_auto/v1780282697/copy_of_whatsapp_image_2026-05-31_at_213500_w5n2uw.jpg'
@@ -68,6 +123,7 @@ export function HeroSection() {
           <div className="h-px flex-1 bg-rose/30 max-w-[60px]" />
         </div>
         <p className="mt-4 font-serif italic text-warm-muted text-base">Arequipa, Perú</p>
+        <Countdown />
         <a
           href="#rsvp"
           className="mt-10 inline-block bg-rose border border-rose text-white font-sans text-[12px] uppercase tracking-widest px-8 py-3 hover:bg-rose-dark hover:border-rose-dark transition-colors duration-300"
