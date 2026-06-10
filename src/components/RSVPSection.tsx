@@ -232,14 +232,7 @@ export function RSVPSection() {
                 <CopyableRow label="Cuenta" value="3003090873329" />
                 <div className="h-px bg-rose-blush/30" />
                 <CopyableRow label="CCI" value="00330001309087332913" />
-              </div>
-              <div className="mt-5 pt-5 border-t border-rose-blush/30 flex flex-col items-center gap-2">
-                <p className="font-sans text-[10px] uppercase tracking-widest text-warm-muted">Yape</p>
-                <div className="w-24 h-24 bg-warm-light border border-rose-blush/40 flex items-center justify-center">
-                  <p className="font-sans text-[9px] uppercase tracking-wider text-warm-muted/60 text-center leading-relaxed">QR<br />aquí</p>
-                </div>
-              </div>
-            </div>
+              </div>            </div>
 
             {/* Mafer */}
             <div className="border border-rose-blush/50 p-6 text-left bg-white">
@@ -253,14 +246,7 @@ export function RSVPSection() {
                 <CopyableRow label="Cuenta" value="21536301738018" />
                 <div className="h-px bg-rose-blush/30" />
                 <CopyableRow label="CCI" value="00221513630173801820" />
-              </div>
-              <div className="mt-5 pt-5 border-t border-rose-blush/30 flex flex-col items-center gap-2">
-                <p className="font-sans text-[10px] uppercase tracking-widest text-warm-muted">Yape</p>
-                <div className="w-24 h-24 bg-warm-light border border-rose-blush/40 flex items-center justify-center">
-                  <p className="font-sans text-[9px] uppercase tracking-wider text-warm-muted/60 text-center leading-relaxed">QR<br />aquí</p>
-                </div>
-              </div>
-            </div>
+              </div>            </div>
           </div>
           <BotanicalDivider className="w-48 mx-auto mt-12" />
         </div>
