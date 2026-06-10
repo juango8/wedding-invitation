@@ -18,7 +18,7 @@ A test guest "Invitado De Prueba" exists with token `9cEkZrKBBN` (status pending
 | 0 | Supabase project + Google OAuth setup (manual, guided) | **done** — GH secrets added, Google OAuth configured (user-confirmed 2026-06-10) |
 | 1 | Drizzle schema, migrations, RLS, RPCs | **done** (2026-06-10) — applied + verified vs live DB and REST |
 | 2 | Public site cutover: per-guest links, new RSVP form | **done** (2026-06-10) — e2e-verified in browser vs live Supabase; merge = live cutover (see checklist) |
-| 3 | Google auth + manage page shell | pending |
+| 3 | Google auth + manage page shell | **done (code)** (2026-06-10) — login screen, gate states, OAuth redirect chain verified; live Google login pending user test |
 | 4 | Manage features: CRUD, monitoring, copy/WhatsApp | pending |
 | 5 | Data import, cleanup, docs, hardening | pending |
 
