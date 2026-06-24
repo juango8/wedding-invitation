@@ -242,11 +242,7 @@ export function RSVPSection() {
         </div>
         <div className="max-w-xl mx-auto relative z-10">
           <BotanicalDivider className="w-48 mx-auto mb-12" />
-          <h2 className="section-title text-center mb-4">¡Estás invitado a nuestra boda!</h2>
-          <p className="text-center font-sans text-[12px] uppercase tracking-widest text-warm-muted mb-12">
-            Por favor confirma antes del 20 de junio de 2026
-          </p>
-
+          <h2 className="section-title text-center mb-12">¡Estás invitado a nuestra boda!</h2>
           {state.kind === 'loading' && (
             <p className="text-center font-sans text-sm text-warm-muted animate-pulse py-10">
               Cargando tu invitación…
